@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable react/no-unused-state */
 /* eslint-disable react/jsx-no-target-blank */
 /* eslint-disable import/extensions */
 /* eslint-disable no-underscore-dangle */
@@ -5,16 +7,7 @@
 /* eslint-disable react/sort-comp */
 /* eslint-disable prettier/prettier */
 import rainbondUtil from '@/utils/rainbond';
-import {
-  Avatar,
-  Dropdown,
-  Icon,
-  Layout,
-  Menu,
-  notification,
-  Popconfirm,
-  Spin
-} from 'antd';
+import { Avatar, Dropdown, Icon, Layout, Menu, notification, Spin } from 'antd';
 import { connect } from 'dva';
 import { routerRedux } from 'dva/router';
 import Debounce from 'lodash-decorators/debounce';
@@ -31,7 +24,6 @@ const { Header } = Layout;
   appDetail: appControl.appDetail,
   currentUser: user.currentUser,
   enterprise: global.enterprise
-  // enterpriseServiceInfo: order.enterpriseServiceInfo
 }))
 export default class GlobalHeader extends PureComponent {
   constructor(props) {
@@ -42,6 +34,7 @@ export default class GlobalHeader extends PureComponent {
       showChangePassword: false
     };
   }
+
   handleMenuClick = ({ key }) => {
     const { dispatch } = this.props;
     if (key === 'userCenter') {
@@ -107,12 +100,40 @@ export default class GlobalHeader extends PureComponent {
       });
     });
   };
+  // Menu的切换事件
+  handleMenuClickSelect = ({ key }) => {
+    const { dispatch } = this.props;
+    switch (key) {
+      case 'enterprise':
+        dispatch(routerRedux.push('/'));
+        break;
+      case 'team':
+        dispatch(
+          routerRedux.push({
+            pathname: '/team/qowjtep0/region/default/index',
+            state: 'team'
+          })
+        );
+        break;
+      case 'app':
+        dispatch(routerRedux.push('/team/qowjtep0/region/default/apps/1'));
+        break;
+      case 'componment':
+        dispatch(
+          routerRedux.push(
+            '/team/qowjtep0/region/default/components/grd0ac47/overview'
+          )
+        );
+        break;
+      default:
+        break;
+    }
+  };
   render() {
     const { currentUser, customHeader, rainbondInfo, collapsed } = this.props;
     if (!currentUser) {
       return null;
     }
-    const { isNewbieGuide } = this.state;
     const handleUserSvg = () => (
       <svg viewBox="0 0 1024 1024" width="13" height="13">
         <path
@@ -156,8 +177,27 @@ export default class GlobalHeader extends PureComponent {
         </Menu>
       </div>
     );
-    const enterpriseEdition = rainbondUtil.isEnterpriseEdition(rainbondInfo);
-    const platformUrl = rainbondUtil.documentPlatform_url(rainbondInfo);
+    // 体验向导
+    const guideData = [
+      { id: 'enterprise', name: '企业视图功能' },
+      { id: 'team', name: '团队视图功能' },
+      { id: 'app', name: '应用视图功能' },
+      { id: 'componment', name: '组件视图功能' }
+    ];
+    const menuSelect = (
+      <div>
+        <Menu
+          onClick={this.handleMenuClickSelect}
+          className={styles.menuSelect}
+        >
+          {guideData.map(item => (
+            <Menu.Item key={item.id}>
+              <div className={styles.viewItem}>{item.name}</div>
+            </Menu.Item>
+          ))}
+        </Menu>
+      </div>
+    );
     return (
       <Header className={styles.header}>
         <Icon
@@ -169,49 +209,15 @@ export default class GlobalHeader extends PureComponent {
 
         {customHeader && customHeader()}
         <div className={styles.right}>
-          {enterpriseEdition ? (
-            <span className={styles.action} style={{ color: '#fff' }}>
-              企业版
+          {/* 体验向导 */}
+          <Dropdown overlay={menuSelect}>
+            <span
+              style={{ cursor: 'pointer' }}
+              className={`${styles.experience_title}`}
+            >
+              DEMO演示向导
             </span>
-          ) : (
-            <a
-              className={styles.action}
-              style={{ color: '#fff' }}
-              href="https://cloud.goodrain.com/page/price"
-              // eslint-disable-next-line react/jsx-no-target-blank
-              target="_blank"
-            >
-              开源版
-            </a>
-          )}
-          {isNewbieGuide && (
-            <Popconfirm
-              title="是否要关闭新手引导功能、关闭后并无法开启此功能?"
-              onConfirm={this.handlIsOpenNewbieGuide}
-              okText="关闭"
-              cancelText="取消"
-            >
-              <a
-                className={styles.action}
-                style={{ color: '#fff' }}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                新手引导
-              </a>
-            </Popconfirm>
-          )}
-          {platformUrl && (
-            <a
-              className={styles.action}
-              style={{ color: '#fff' }}
-              href={`${platformUrl}docs/`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              平台使用手册
-            </a>
-          )}
+          </Dropdown>
           {currentUser ? (
             <Dropdown overlay={menu}>
               <span className={`${styles.action} ${styles.account}`}>
