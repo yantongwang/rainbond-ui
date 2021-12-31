@@ -110,18 +110,18 @@ export default class GlobalHeader extends PureComponent {
       case 'team':
         dispatch(
           routerRedux.push({
-            pathname: '/team/qowjtep0/region/default/index',
+            pathname: '/team/cheitnp6/region/demo/index',
             state: 'team'
           })
         );
         break;
       case 'app':
-        dispatch(routerRedux.push('/team/qowjtep0/region/default/apps/1'));
+        dispatch(routerRedux.push('/team/cheitnp6/region/demo/apps/1'));
         break;
       case 'componment':
         dispatch(
           routerRedux.push(
-            '/team/qowjtep0/region/default/components/grd0ac47/overview'
+            '/team/cheitnp6/region/demo/components/gr059ce1/overview'
           )
         );
         break;
