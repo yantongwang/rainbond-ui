@@ -338,10 +338,25 @@ i.trigger {
   font-style: italic;
   text-decoration: underline orange;
 }
+
 .menuSelect {
   background-color: rgb(252, 165, 3);
   color: #6578a0;
 }
 .viewItem {
   text-decoration: underline #6578a0;
+}
+
+.subMemuItem {
+  color: #6578a0;
+  text-decoration: underline #6578a0;
+}
+body {
+  :global {
+    .ant-menu-sub,
+    .ant-menu-item-active,
+    .ant-menu-item-selected {
+      background-color: rgb(252, 165, 3) !important;
+    }
+  }
 }

@@ -1,3 +1,6 @@
+/* eslint-disable no-duplicate-case */
+/* eslint-disable array-callback-return */
+/* eslint-disable consistent-return */
 /* eslint-disable no-undef */
 /* eslint-disable react/no-unused-state */
 /* eslint-disable react/jsx-no-target-blank */
@@ -16,7 +19,9 @@ import userIcon from '../../../public/images/user-icon-small.png';
 import { setNewbieGuide } from '../../services/api';
 import ChangePassword from '../ChangePassword';
 import styles from './index.less';
+import token from './token';
 
+const { SubMenu } = Menu;
 const { Header } = Layout;
 
 @connect(({ user, global, appControl }) => ({
@@ -125,9 +130,53 @@ export default class GlobalHeader extends PureComponent {
           )
         );
         break;
+      case 'monitoring_deploy':
+        // 监控部署地址
+        window.open(
+          'http://demo.c9f961.grapps.cn/#/team/cheitnp6/region/demo/apps/9'
+        );
+        break;
+      case 'monitoring_visit':
+        // 监控访问地址
+        window.open('http://8080.gr1779a1.cheitnp6.c9f961.grapps.cn/topology');
+        break;
+      case 'back_stage_deploy':
+        // 后台部署地址
+        window.open(
+          'http://demo.c9f961.grapps.cn/#/team/cheitnp6/region/demo/apps/2'
+        );
+        break;
+      case 'back_stage_visit':
+        // 后台访问地址
+        window.open('http://5000.gr5427bd.cheitnp6.c9f961.grapps.cn/');
+        break;
+      case 'back_stage_plugin':
+        // 后台性能分析插件
+        window.open(
+          'http://demo.c9f961.grapps.cn/#/team/cheitnp6/region/demo/components/gr5427bd/monitor'
+        );
+        break;
+      case 'kiali_visit':
+        // kiali访问地址
+        window.open('http://20001.gr64017a.59zlynqu.c9f961.grapps.cn/kiali/');
+        break;
+      case 'token':
+        // 点击复制
+        this.handleCopyToken();
+        break;
       default:
         break;
     }
+  };
+  // 复制Token
+  handleCopyToken = () => {
+    const ipt = document.querySelector('#token');
+    ipt.type = 'text';
+    // 选中文本
+    ipt.select();
+    // 复制Token
+    document.execCommand('Copy');
+    ipt.type = 'hidden';
   };
   render() {
     const { currentUser, customHeader, rainbondInfo, collapsed } = this.props;
@@ -179,10 +228,38 @@ export default class GlobalHeader extends PureComponent {
     );
     // 体验向导
     const guideData = [
-      { id: 'enterprise', name: '企业视图功能' },
+      {
+        id: 'enterprise',
+        name: '企业视图功能'
+      },
       { id: 'team', name: '团队视图功能' },
       { id: 'app', name: '应用视图功能' },
-      { id: 'componment', name: '组件视图功能' }
+      { id: 'componment', name: '组件视图功能' },
+      {
+        id: 'monitoring',
+        name: '监控系统示例',
+        children: [
+          { id: 'monitoring_deploy', name: '部署地址' },
+          { id: 'monitoring_visit', name: '访问地址' }
+        ]
+      },
+      {
+        id: 'back_stage',
+        name: '后台管理系统',
+        children: [
+          { id: 'back_stage_deploy', name: '部署地址' },
+          { id: 'back_stage_visit', name: '访问地址' },
+          { id: 'back_stage_plugin', name: '性能分析插件' }
+        ]
+      },
+      {
+        id: 'kiali',
+        name: 'kiali示例',
+        children: [
+          { id: 'kiali_visit', name: '访问地址' },
+          { id: 'token', name: '点击复制Token' }
+        ]
+      }
     ];
     const menuSelect = (
       <div>
@@ -190,11 +267,26 @@ export default class GlobalHeader extends PureComponent {
           onClick={this.handleMenuClickSelect}
           className={styles.menuSelect}
         >
-          {guideData.map(item => (
-            <Menu.Item key={item.id}>
-              <div className={styles.viewItem}>{item.name}</div>
-            </Menu.Item>
-          ))}
+          {guideData.map(item => {
+            if (!item.children) {
+              return (
+                <Menu.Item key={item.id}>
+                  <div className={styles.viewItem}>{item.name}</div>
+                </Menu.Item>
+              );
+            }
+            if (item.children) {
+              return (
+                <SubMenu title={item.name} className={styles.viewItem}>
+                  {item.children.map(items => (
+                    <Menu.Item key={items.id} className={styles.subMemuItem}>
+                      {items.name}
+                    </Menu.Item>
+                  ))}
+                </SubMenu>
+              );
+            }
+          })}
         </Menu>
       </div>
     );
@@ -210,7 +302,7 @@ export default class GlobalHeader extends PureComponent {
         {customHeader && customHeader()}
         <div className={styles.right}>
           {/* 体验向导 */}
-          <Dropdown overlay={menuSelect}>
+          <Dropdown overlay={menuSelect} overlayClassName={styles.namespace}>
             <span
               style={{ cursor: 'pointer' }}
               className={`${styles.experience_title}`}
@@ -241,6 +333,8 @@ export default class GlobalHeader extends PureComponent {
             onCancel={this.cancelChangePass}
           />
         )}
+        {/* Token的input框 */}
+        <input type="hidden" value={token} id="token" />
       </Header>
     );
   }
