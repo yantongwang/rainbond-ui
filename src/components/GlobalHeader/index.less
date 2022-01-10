@@ -330,7 +330,7 @@ i.trigger {
 .experience_title {
   position: absolute;
   top: 0;
-  right: 240px;
+  right: 300px;
   color: orange;
   font-size: 18px;
   font-weight: bolder;
@@ -340,23 +340,33 @@ i.trigger {
 }
 
 .menuSelect {
-  background-color: rgb(252, 165, 3);
-  color: #6578a0;
+  background-color: rgb(192, 139, 39);
+  color: #ffffff;
+  width: 269px !important;
 }
 .viewItem {
-  text-decoration: underline #6578a0;
+  font-size: 16px !important;
+  position: relative;
 }
-
-.subMemuItem {
-  color: #6578a0;
-  text-decoration: underline #6578a0;
-}
-body {
+.namespace {
   :global {
-    .ant-menu-sub,
-    .ant-menu-item-active,
+    .ant-menu-submenu-title {
+      font-size: 16px !important;
+    }
+    .ant-menu-submenu-arrow {
+      display: none !important;
+    }
     .ant-menu-item-selected {
-      background-color: rgb(252, 165, 3) !important;
+      background-color: rgb(192, 139, 39) !important;
     }
   }
+}
+.subMemuItem {
+  color: #ffffff;
+  font-size: 16px !important;
+}
+.arrow {
+  position: absolute;
+  right: -12px;
+  top: 11px;
 }

@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-no-duplicate-props */
+/* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable no-duplicate-case */
 /* eslint-disable array-callback-return */
 /* eslint-disable consistent-return */
@@ -106,13 +108,13 @@ export default class GlobalHeader extends PureComponent {
     });
   };
   // Menu的切换事件
-  handleMenuClickSelect = ({ key }) => {
+  handleMenuClickSelect = id => {
     const { dispatch } = this.props;
-    switch (key) {
-      case 'enterprise':
+    switch (id) {
+      case 0:
         dispatch(routerRedux.push('/'));
         break;
-      case 'team':
+      case 1:
         dispatch(
           routerRedux.push({
             pathname: '/team/cheitnp6/region/demo/index',
@@ -120,49 +122,41 @@ export default class GlobalHeader extends PureComponent {
           })
         );
         break;
-      case 'app':
+      case 2:
         dispatch(routerRedux.push('/team/cheitnp6/region/demo/apps/1'));
         break;
-      case 'componment':
+      case 3:
         dispatch(
           routerRedux.push(
             '/team/cheitnp6/region/demo/components/gr059ce1/overview'
           )
         );
         break;
-      case 'monitoring_deploy':
+      case 4:
         // 监控部署地址
         window.open(
           'http://demo.c9f961.grapps.cn/#/team/cheitnp6/region/demo/apps/9'
         );
         break;
-      case 'monitoring_visit':
-        // 监控访问地址
-        window.open('http://8080.gr1779a1.cheitnp6.c9f961.grapps.cn/topology');
-        break;
-      case 'back_stage_deploy':
+      case 5:
         // 后台部署地址
         window.open(
           'http://demo.c9f961.grapps.cn/#/team/cheitnp6/region/demo/apps/2'
         );
         break;
-      case 'back_stage_visit':
-        // 后台访问地址
-        window.open('http://5000.gr5427bd.cheitnp6.c9f961.grapps.cn/');
+      case 6:
+        // 点击复制Token
+        this.handleCopyToken();
         break;
-      case 'back_stage_plugin':
-        // 后台性能分析插件
+      case 7:
+        window.open(
+          'http://demo.c9f961.grapps.cn/#/team/k86bpcjz/region/demo/apps/3'
+        );
+        break;
+      case 8:
         window.open(
           'http://demo.c9f961.grapps.cn/#/team/cheitnp6/region/demo/components/gr5427bd/monitor'
         );
-        break;
-      case 'kiali_visit':
-        // kiali访问地址
-        window.open('http://20001.gr64017a.59zlynqu.c9f961.grapps.cn/kiali/');
-        break;
-      case 'token':
-        // 点击复制
-        this.handleCopyToken();
         break;
       default:
         break;
@@ -177,7 +171,25 @@ export default class GlobalHeader extends PureComponent {
     // 复制Token
     document.execCommand('Copy');
     ipt.type = 'hidden';
+    window.open('http://20001.gr64017a.59zlynqu.c9f961.grapps.cn/kiali/');
   };
+  // 鼠标移上
+  handleMouseUserOver = id => {
+    const menuItem = document.getElementsByClassName('menuItem');
+    // 排他
+    for (let i = 0; i < menuItem.length; i++) {
+      for (let j = 0; j < menuItem.length; j++) {
+        menuItem[j].classList.remove('activeSvg');
+      }
+      menuItem[id].classList.add('activeSvg');
+    }
+  };
+  // 鼠标移除
+  handleMouseOut = id => {
+    const menuItem = document.getElementsByClassName('menuItem');
+    menuItem[id].classList.remove('activeSvg');
+  };
+
   render() {
     const { currentUser, customHeader, rainbondInfo, collapsed } = this.props;
     if (!currentUser) {
@@ -229,67 +241,82 @@ export default class GlobalHeader extends PureComponent {
     // 体验向导
     const guideData = [
       {
-        id: 'enterprise',
+        id: 0,
         name: '企业视图功能'
       },
-      { id: 'team', name: '团队视图功能' },
-      { id: 'app', name: '应用视图功能' },
-      { id: 'componment', name: '组件视图功能' },
+      { id: 1, name: '团队视图功能' },
+      { id: 2, name: '应用视图功能' },
+      { id: 3, name: '组件视图功能' },
       {
-        id: 'monitoring',
-        name: '监控系统示例',
-        children: [
-          { id: 'monitoring_deploy', name: '部署地址' },
-          { id: 'monitoring_visit', name: '访问地址' }
-        ]
+        id: 4,
+        name: '应用示例：SkyWalking'
       },
       {
-        id: 'back_stage',
-        name: '后台管理系统',
-        children: [
-          { id: 'back_stage_deploy', name: '部署地址' },
-          { id: 'back_stage_visit', name: '访问地址' },
-          { id: 'back_stage_plugin', name: '性能分析插件' }
-        ]
+        id: 5,
+        name: '应用示例：后台管理系统'
       },
       {
-        id: 'kiali',
-        name: 'kiali示例',
-        children: [
-          { id: 'kiali_visit', name: '访问地址' },
-          { id: 'token', name: '点击复制Token' }
-        ]
+        id: 6,
+        name: '应用示例：Istio(点击复制Token)'
+      },
+      {
+        id: 7,
+        name: '应用示例：SpringCloud'
+      },
+      {
+        id: 8,
+        name: '插件示例：性能分析插件'
       }
     ];
+    const SVG = (
+      <svg
+        t="1641811433831"
+        className="icon"
+        viewBox="0 0 1024 1024"
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg"
+        p-id="5924"
+        width="20"
+        height="20"
+        className={`${styles.arrow}`}
+      >
+        <path
+          d="M438.584533 738.132267c14.946133 15.374933 39.2 15.374933 54.1792 0l192.600533-198.250667c14.9376-15.403733 14.9376-40.3744 0-55.746133L492.763733 285.890133c-14.9792-15.403733-39.233067-15.403733-54.1792 0-14.970667 15.3792-14.970667 40.3456 0 55.7504L604.1056 512.0064l-165.521067 170.346667C423.613867 697.7568 423.613867 722.7232 438.584533 738.132267L438.584533 738.132267zM438.584533 738.132267"
+          p-id="5925"
+          fill="#ffffff"
+        />
+      </svg>
+    );
+
     const menuSelect = (
       <div>
-        <Menu
-          onClick={this.handleMenuClickSelect}
-          className={styles.menuSelect}
-        >
+        <Menu className={styles.menuSelect}>
           {guideData.map(item => {
-            if (!item.children) {
-              return (
-                <Menu.Item key={item.id}>
-                  <div className={styles.viewItem}>{item.name}</div>
-                </Menu.Item>
-              );
-            }
-            if (item.children) {
-              return (
-                <SubMenu title={item.name} className={styles.viewItem}>
-                  {item.children.map(items => (
-                    <Menu.Item key={items.id} className={styles.subMemuItem}>
-                      {items.name}
-                    </Menu.Item>
-                  ))}
-                </SubMenu>
-              );
-            }
+            return (
+              <Menu.Item
+                className="menuItem"
+                key={item.id}
+                onClick={() => {
+                  this.handleMenuClickSelect(item.id);
+                }}
+                onMouseOver={() => {
+                  this.handleMouseUserOver(item.id);
+                }}
+                onMouseLeave={() => {
+                  this.handleMouseOut(item.id);
+                }}
+              >
+                <div className={styles.viewItem}>
+                  {item.name}
+                  {SVG}
+                </div>
+              </Menu.Item>
+            );
           })}
         </Menu>
       </div>
     );
+
     return (
       <Header className={styles.header}>
         <Icon
@@ -302,7 +329,11 @@ export default class GlobalHeader extends PureComponent {
         {customHeader && customHeader()}
         <div className={styles.right}>
           {/* 体验向导 */}
-          <Dropdown overlay={menuSelect} overlayClassName={styles.namespace}>
+          <Dropdown
+            overlay={menuSelect}
+            overlayClassName={styles.namespace}
+            arrow
+          >
             <span
               style={{ cursor: 'pointer' }}
               className={`${styles.experience_title}`}
