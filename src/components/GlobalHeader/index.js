@@ -242,11 +242,11 @@ export default class GlobalHeader extends PureComponent {
     const guideData = [
       {
         id: 0,
-        name: '企业视图功能'
+        name: '企业视图'
       },
-      { id: 1, name: '团队视图功能' },
-      { id: 2, name: '应用视图功能' },
-      { id: 3, name: '组件视图功能' },
+      { id: 1, name: '团队视图' },
+      { id: 2, name: '应用视图' },
+      { id: 3, name: '组件视图' },
       {
         id: 4,
         name: '应用示例：SkyWalking'
@@ -338,7 +338,7 @@ export default class GlobalHeader extends PureComponent {
               style={{ cursor: 'pointer' }}
               className={`${styles.experience_title}`}
             >
-              DEMO演示向导
+              体验向导
             </span>
           </Dropdown>
           {currentUser ? (
