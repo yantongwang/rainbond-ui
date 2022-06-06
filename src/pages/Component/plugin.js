@@ -1,3 +1,7 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-unused-expressions */
+/* eslint-disable no-console */
+/* eslint-disable camelcase */
 /* eslint-disable no-sparse-arrays */
 import {
   Button,
@@ -13,6 +17,7 @@ import {
   Row,
   Select,
   Spin,
+  Table,
   Tooltip
 } from 'antd';
 import { connect } from 'dva';
@@ -349,7 +354,7 @@ class ConfigDownstreamPort extends PureComponent {
               </Select>{' '}
             </span>{' '}
             <span style={{ marginRight: 24 }}>
-              端口协议: {currData.protocol}
+              端口协议1: {currData.protocol}
             </span>{' '}
           </div>
         }
@@ -391,49 +396,55 @@ class ConfigUpstreamPort extends PureComponent {
   getCurrData = port => this.props.data.filter(item => item.port === port)[0];
   render() {
     const { data } = this.props;
+
     const { currAppLoading, config_name, currPort } = this.state;
     const currData = this.getCurrData(currPort);
     return (
-      <Card
-        style={{
-          marginBottom: 24
-        }}
-        type="inner"
-        title={
-          <div>
-            {config_name}
-            <span
-              style={{
-                marginRight: 24,
-                marginLeft: 16
-              }}
-            >
-              端口号:{' '}
-              <Select
-                getPopupContainer={triggerNode => triggerNode.parentNode}
-                onChange={this.handlePortChange}
-                value={currPort}
+      <>
+        <Card
+          style={{
+            marginBottom: 24
+          }}
+          type="inner"
+          title={
+            <div>
+              {config_name}
+              <span
+                style={{
+                  marginRight: 24,
+                  marginLeft: 16
+                }}
               >
-                {data.map(item => (
-                  <Option key={item.port} value={item.port}>
-                    {item.port}
-                  </Option>
-                ))}
-              </Select>
-            </span>{' '}
-            <span style={{ marginRight: 24 }}>
-              {' '}
-              端口协议 : {currData.protocol}{' '}
-            </span>{' '}
-          </div>
-        }
-      >
-        {currAppLoading ? (
-          <Spin />
-        ) : (
-          <ConfigItems onChange={this.handleOnChange} data={currData.config} />
-        )}
-      </Card>
+                端口号:{' '}
+                <Select
+                  getPopupContainer={triggerNode => triggerNode.parentNode}
+                  onChange={this.handlePortChange}
+                  value={currPort}
+                >
+                  {data.map(item => (
+                    <Option key={item.port} value={item.port}>
+                      {item.port}
+                    </Option>
+                  ))}
+                </Select>
+              </span>{' '}
+              <span style={{ marginRight: 24 }}>
+                {' '}
+                端口协议2 : {currData.protocol}{' '}
+              </span>{' '}
+            </div>
+          }
+        >
+          {currAppLoading ? (
+            <Spin />
+          ) : (
+            <ConfigItems
+              onChange={this.handleOnChange}
+              data={currData.config}
+            />
+          )}
+        </Card>
+      </>
     );
   }
 }
@@ -445,15 +456,18 @@ class ConfigUnDefine extends PureComponent {
     const data = this.props.data || [];
     const configName = this.props.data.config_group_name;
     return (
-      <Card
-        style={{
-          marginBottom: 24
-        }}
-        type="inner"
-        title={<div>{configName}</div>}
-      >
-        <ConfigItems onChange={this.handleOnChange} data={data.config} />
-      </Card>
+      <>
+        <h4>配置组</h4>
+        <Card
+          style={{
+            marginBottom: 24
+          }}
+          type="inner"
+          title={<div>{configName}</div>}
+        >
+          <ConfigItems onChange={this.handleOnChange} data={data.config} />
+        </Card>
+      </>
     );
   }
 }
@@ -484,6 +498,23 @@ class PluginConfigs extends PureComponent {
     const undefine_env = configs.undefine_env || {};
     const downstream_env = configs.downstream_env || [];
     const upstream_env = configs.upstream_env || [];
+    const { config } = undefine_env;
+    const storageDataList = [];
+    config &&
+      config
+        .filter(
+          item =>
+            item.attr_type === 'config-file' || item.attr_type === 'storage'
+        )
+        .map(value => {
+          const { attr_default_value } = value;
+          const str = attr_default_value && JSON.parse(attr_default_value);
+          storageDataList.push({
+            volume_name: str.volume_name,
+            volume_path: str.volume_path,
+            attr_type: str.attr_type
+          });
+        });
     return (
       <div style={{ padding: '20px 0' }}>
         {JSON.stringify(undefine_env) !== '{}'
@@ -495,6 +526,30 @@ class PluginConfigs extends PureComponent {
         {downstream_env.length
           ? this.renderConfig(downstream_env, 'downstream_port')
           : null}
+        {/* 存储管理 */}
+        <h4>存储管理</h4>
+        <Table
+          columns={[
+            {
+              title: '存储名称',
+              dataIndex: 'volume_name'
+            },
+            {
+              title: '挂载路径',
+              dataIndex: 'volume_path'
+            },
+            {
+              title: '存储类型',
+              dataIndex: 'attr_type',
+              render(_, data) {
+                const { attr_type } = data;
+                return attr_type === 'config-file' ? '配置文件' : '共享存储';
+              }
+            }
+          ]}
+          dataSource={storageDataList}
+          pagination={false}
+        />
       </div>
     );
   }
@@ -622,8 +677,13 @@ export default class Index extends PureComponent {
       },
       callback: data => {
         if (data) {
-          this.state.openedPlugin[plugin.plugin_id] = data.bean || {};
-          this.forceUpdate();
+          const temp = {};
+          temp[plugin.plugin_id] = data.bean || {};
+          this.setState({
+            openedPlugin: Object.assign({}, temp)
+          });
+          // this.state.openedPlugin[plugin.plugin_id] = data.bean || {};
+          // this.forceUpdate();
         }
       }
     });
@@ -675,7 +735,7 @@ export default class Index extends PureComponent {
                     }}
                     href="javascript:;"
                   >
-                    隐藏配置
+                    隐藏配置2
                   </a>
                 ) : (
                   <a
@@ -684,7 +744,7 @@ export default class Index extends PureComponent {
                     }}
                     href="javascript:;"
                   >
-                    查看配置
+                    查看配置1
                   </a>
                 ),
                 ,

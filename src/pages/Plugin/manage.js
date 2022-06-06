@@ -1,3 +1,6 @@
+/* eslint-disable react/no-unused-state */
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-unused-expressions */
 /* eslint-disable camelcase */
 import { Button, Card, Col, Form, Icon, Notification, Row, Table } from 'antd';
 import { connect } from 'dva';
@@ -7,6 +10,7 @@ import AddOrEditConfig from '../../components/AddOrEditConfig';
 import BuildPluginVersion from '../../components/buildPluginVersion';
 import ConfirmModal from '../../components/ConfirmModal';
 import CreatePluginForm from '../../components/CreatePluginForm';
+import EditStorageConfig from '../../components/EditStorageConfig';
 import ScrollerX from '../../components/ScrollerX';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import { createEnterprise, createTeam } from '../../utils/breadcrumb';
@@ -41,7 +45,11 @@ export default class Index extends PureComponent {
       apps: [],
       page: 1,
       page_size: 6,
-      total: 0
+      total: 0,
+      storgeListData: [],
+      showStorageConfig: false,
+      editStoragData: {},
+      isEditor: false
     };
     this.mount = false;
   }
@@ -140,8 +148,31 @@ export default class Index extends PureComponent {
         build_version: this.state.currVersion
       },
       callback: data => {
-        if (data) {
-          this.setState({ config: data.list });
+        const { list } = data;
+        console.log(list, 'list');
+        // 配置组管理数据处理
+        const config =
+          list &&
+          list.reduce((pre, item) => {
+            return item.injection !== 'plugin_storage' ? [...pre, item] : pre;
+          }, []);
+        // 存储管理数据处理
+        const storgeListData =
+          list &&
+          list.reduce((pre, item) => {
+            return item.injection === 'plugin_storage' ? [...pre, item] : pre;
+          }, []);
+        storgeListData &&
+          storgeListData.length > 0 &&
+          storgeListData.map(item => {
+            const attr_default_value =
+              JSON.parse(item.options[0].attr_default_value) || '';
+            item.volume_path = attr_default_value.volume_path;
+            item.attr_type = attr_default_value.attr_type;
+          });
+        console.log(storgeListData, 'storgeListData存储管理');
+        if (list) {
+          this.setState({ config, storgeListData });
         }
       }
     });
@@ -208,7 +239,8 @@ export default class Index extends PureComponent {
         team_name: globalUtil.getCurrTeamName(),
         plugin_id: this.getId(),
         build_version: this.state.currVersion,
-        config_group_id: configVisible.ID
+        config_group_id: configVisible.ID,
+        config_name: configVisible.config_name
       },
       callback: () => {
         Notification.success({ message: '删除成功' });
@@ -229,9 +261,11 @@ export default class Index extends PureComponent {
       callback: () => {
         this.hiddenAddConfig();
         this.getPluginVersionConfig();
+        this.handleCancelAddStorageConfig('storageAdd');
       }
     });
   };
+  // 编辑配置组
   handleEditConfig = values => {
     const { showEditConfig, currVersion } = this.state;
     this.props.dispatch({
@@ -248,6 +282,7 @@ export default class Index extends PureComponent {
       callback: () => {
         this.hideEditConfig();
         this.getPluginVersionConfig();
+        this.handleCancelAddStorageConfig('storageEdit');
       }
     });
   };
@@ -328,7 +363,67 @@ export default class Index extends PureComponent {
       pluginUtil.canEditInfoAndConfig(this.state.currInfo)
     );
   };
-
+  showAddStorgeConfig = () => {
+    this.setState({ showStorageConfig: true });
+  };
+  handleCancelAddStorageConfig = type => {
+    this.setState({
+      showStorageConfig: false,
+      editStoragData: {},
+      isEditor: false
+    });
+    type &&
+      Notification.success({
+        message: type === 'storageAdd' ? '新增成功' : '修改成功'
+      });
+  };
+  // 新增或编辑存储
+  handleSubmitStorageConfig = (vals, data) => {
+    const { isEditor } = this.state;
+    const params = {};
+    params.ID = (data && data.ID) || ''; // 编辑
+    params.config_name = vals.volume_name;
+    params.injection = 'plugin_storage';
+    params.service_meta_type = 'un_define';
+    params.options = [
+      {
+        ID: '',
+        attr_alt_value: '',
+        attr_default_value: JSON.stringify({
+          volume_path: vals.volume_path,
+          file_content: vals.file_content || '',
+          attr_type: vals.volume_type,
+          volume_name: vals.volume_name
+        }),
+        attr_info: '',
+        attr_name: `plugin_storage_${vals.volume_name}`,
+        attr_type: vals.volume_type,
+        is_change: true,
+        protocol: ''
+      }
+    ];
+    // 新增
+    !isEditor && this.handleAddConfig(params);
+    // 编辑
+    isEditor && this.handleEditConfig(params);
+  };
+  // 编辑存储
+  handleEditStorage = data => {
+    const { config_name, options } = data;
+    data.volume_name = config_name;
+    const str =
+      (options &&
+        options[0] &&
+        options[0].attr_default_value &&
+        JSON.parse(options[0].attr_default_value)) ||
+      '';
+    data.file_content = str.file_content;
+    this.setState({
+      isEditor: true,
+      editStoragData: data,
+      showStorageConfig: true
+    });
+  };
   sharePlugin = () => {
     const { dispatch } = this.props;
     dispatch({
@@ -382,7 +477,10 @@ export default class Index extends PureComponent {
       apps,
       page,
       page_size,
-      total
+      total,
+      storgeListData,
+      showStorageConfig,
+      isEditor
     } = this.state;
     if (!currInfo) return null;
     const action = (
@@ -401,7 +499,7 @@ export default class Index extends PureComponent {
         </ButtonGroup>
       </div>
     );
-
+    // 存储管理
     const extra = (
       <Row
         style={{
@@ -560,7 +658,78 @@ export default class Index extends PureComponent {
             </Button>
           </div>
         </Card>
+        {/* 存储管理 */}
+        <Card
+          style={{
+            marginBottom: 16
+          }}
+          title="存储管理"
+        >
+          <Table
+            columns={[
+              {
+                title: '存储名称',
+                dataIndex: 'config_name',
+                key: '1'
+              },
+              { title: '挂载路径', dataIndex: 'volume_path', key: '2' },
+              {
+                title: '存储类型',
+                dataIndex: 'attr_type',
+                key: '3',
+                render: val => {
+                  return val === 'storage' ? '共享存储' : '配置文件';
+                }
+              },
+              {
+                title: '操作',
+                dataIndex: 'action',
+                key: '4',
+                render: (_v, data) => {
+                  return (
+                    <Fragment>
+                      {isEdit && (
+                        <a
+                          onClick={() => {
+                            this.handleEditStorage(data);
+                          }}
+                          style={{
+                            marginRight: 8
+                          }}
+                        >
+                          修改
+                        </a>
+                      )}
+                      {isDelete && (
+                        <a
+                          onClick={() => {
+                            this.handleOpenDelConfigVisible(data);
+                          }}
+                        >
+                          删除
+                        </a>
+                      )}
+                    </Fragment>
+                  );
+                }
+              }
+            ]}
+            dataSource={storgeListData}
+            pagination={false}
+          />
 
+          <div
+            style={{
+              textAlign: 'right',
+              paddingTop: 24
+            }}
+          >
+            <Button onClick={this.showAddStorgeConfig}>
+              <Icon type="plus" />
+              新增存储
+            </Button>
+          </div>
+        </Card>
         <Card title="已安装当前插件的组件">
           <Table
             columns={[
@@ -649,6 +818,15 @@ export default class Index extends PureComponent {
             event_id={event_id}
             plugin_id={this.getId()}
             build_version={currVersion}
+          />
+        )}
+        {/* 新增存储 */}
+        {showStorageConfig && (
+          <EditStorageConfig
+            onCancel={this.handleCancelAddStorageConfig}
+            onSubmit={this.handleSubmitStorageConfig}
+            data={this.state.editStoragData} // 编辑数据
+            editor={isEditor}
           />
         )}
       </PageHeaderLayout>

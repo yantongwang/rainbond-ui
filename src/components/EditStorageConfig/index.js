@@ -1,3 +1,7 @@
+/* eslint-disable no-unused-expressions */
+/* eslint-disable no-loop-func */
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-useless-constructor */
 /* eslint-disable camelcase */
 import {
   Button,
@@ -10,36 +14,29 @@ import {
   Tooltip
 } from 'antd';
 import React, { PureComponent } from 'react';
+import CodeMirrorForm from '../../components/CodeMirrorForm';
 import pluginUtil from '../../utils/plugin';
 
 const FormItem = Form.Item;
-const RadioGroup = Radio.Group;
 
 @Form.create()
 export default class AddVolumes extends PureComponent {
   constructor(props) {
     super(props);
-    this.state = { volumeCapacityValidation: {} };
+    this.state = { volumeCapacityValidation: {}, optionsConfig: false };
   }
-  componentDidMount = () => {
-    const { data } = this.props;
-    if (data && data.volume_type) {
-      // this.setVolumeCapacityValidation(data.volume_type);
-    } else {
-      // this.setVolumeCapacityValidation('share-file');
-    }
-  };
+
   // eslint-disable-next-line react/sort-comp
   handleSubmit = e => {
     e.preventDefault();
-    const { form, onSubmit } = this.props;
+    const { form, onSubmit, data } = this.props;
     form.validateFields((err, values) => {
       if (!err && onSubmit) {
         const ismount = pluginUtil.isMountPath(values.volume_path);
         if (ismount) {
           return notification.warning({ message: '挂载路径不可使用' });
         }
-        onSubmit(values);
+        onSubmit(values, data);
       }
     });
   };
@@ -57,7 +54,6 @@ export default class AddVolumes extends PureComponent {
       callback('最大长度100位');
       return;
     }
-
     callback();
   };
 
@@ -68,7 +64,13 @@ export default class AddVolumes extends PureComponent {
     }
   };
   handleChange = e => {
-    this.setVolumeCapacityValidation(e.target.value);
+    e.target.value === 'config-file'
+      ? this.setState({
+          optionsConfig: true
+        })
+      : this.setState({
+          optionsConfig: false
+        });
   };
   setVolumeCapacityValidation = volume_type => {
     const { volumeOpts } = this.props;
@@ -144,15 +146,17 @@ export default class AddVolumes extends PureComponent {
     }
   };
   render() {
-    const { getFieldDecorator } = this.props.form;
-    const { data = {}, volumeOpts } = this.props;
-    const { volumeCapacityValidation } = this.state;
+    const {
+      data = {},
+      form: { getFieldDecorator, setFieldsValue }
+    } = this.props;
+    const { volumeCapacityValidation, optionsConfig } = this.state;
     let defaultVolumeCapacity = '';
     if (data.volume_capacity) {
-      defaultVolumeCapacity = data.volume_capacity;
+      defaultVolumeCapacity = data.volume_capacity || '';
     }
     if (volumeCapacityValidation.default) {
-      defaultVolumeCapacity = volumeCapacityValidation.default;
+      defaultVolumeCapacity = volumeCapacityValidation.default || '';
     }
 
     const formItemLayout = {
@@ -217,7 +221,7 @@ export default class AddVolumes extends PureComponent {
               ]
             })(<Input placeholder="请输入挂载路径" />)}
           </FormItem>
-          <FormItem {...formItemLayout} label="存储配额(GB)">
+          {/* <FormItem {...formItemLayout} label="存储配额(GB)">
             {getFieldDecorator('volume_capacity', {
               initialValue: defaultVolumeCapacity,
               rules: [
@@ -241,10 +245,10 @@ export default class AddVolumes extends PureComponent {
                 disabled={!!this.props.editor}
               />
             )}
-          </FormItem>
+          </FormItem> */}
           <FormItem {...formItemLayout} label="类型">
             {getFieldDecorator('volume_type', {
-              initialValue: data.volume_type || 'share-file',
+              initialValue: data.attr_type || 'storage',
               rules: [
                 {
                   required: true,
@@ -252,23 +256,35 @@ export default class AddVolumes extends PureComponent {
                 }
               ]
             })(
-              <RadioGroup onChange={this.handleChange}>
-                {volumeOpts.map(item => {
-                  return (
-                    <Radio
-                      key={item.volume_type}
-                      value={item.volume_type}
-                      disabled={!!this.props.editor}
-                    >
-                      <Tooltip title={item.description}>
-                        {item.name_show}
-                      </Tooltip>
-                    </Radio>
-                  );
-                })}
-              </RadioGroup>
+              <Radio.Group onChange={this.handleChange}>
+                <Radio key="1" value="storage" disabled={!!this.props.editor}>
+                  <Tooltip title="">共享存储</Tooltip>
+                </Radio>
+                <Radio
+                  key="2"
+                  value="config-file"
+                  disabled={!!this.props.editor}
+                >
+                  <Tooltip title="">配置文件</Tooltip>
+                </Radio>
+              </Radio.Group>
             )}
           </FormItem>
+
+          {/* 配置项 */}
+          {(optionsConfig || data.attr_type === 'config-file') && (
+            <CodeMirrorForm
+              setFieldsValue={setFieldsValue}
+              formItemLayout={formItemLayout}
+              Form={Form}
+              style={{ marginBottom: '20px' }}
+              getFieldDecorator={getFieldDecorator}
+              name="file_content"
+              label="配置文件内容"
+              message="请编辑内容"
+              data={data.file_content || ''}
+            />
+          )}
         </Form>
         <div
           style={{
